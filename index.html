@@ -55,7 +55,8 @@
   }
   .big-btn:active{transform:translateY(3px); box-shadow:0 0 18px rgba(37,244,255,.4), 0 1px 0 #0d7f92;}
   .big-btn:focus-visible{outline:3px solid var(--gold); outline-offset:3px;}
-  .hint{font-size:13px; color:#a9b8e6; max-width:34ch; line-height:1.5; margin:0;}
+  .hint{font-size:13px; color:#a9b8e6; max-width:40ch; line-height:1.6; margin:0;}
+  .hint b{color:var(--ink);}
   .stats{display:flex; gap:26px; font-size:13px; color:#8ea3d8; letter-spacing:.08em; text-transform:uppercase;}
   .stats b{display:block; font-size:22px; color:var(--ink); letter-spacing:0; font-variant-numeric:tabular-nums;}
   #soundBtn{
@@ -79,7 +80,7 @@
   <h1 class="title">Geometry<br><span class="dash">Dash</span></h1>
   <p class="sub">Neon Circuit · Tap Runner</p>
   <button class="big-btn" id="playBtn">Play</button>
-  <p class="hint">Tap anywhere to jump. Hold to keep bouncing. Dodge the spikes, land on the blocks, reach 100%.</p>
+  <p class="hint"><b>Tap</b> to jump · <b>hold</b> to keep bouncing · tap while airborne on a <b>yellow orb</b> for a mid-air jump · <b>pads</b> launch you · <b>portals</b> flip you into ship mode: hold to fly up, release to dive.</p>
   <div class="stats">
     <span>Best<b id="bestStat">0%</b></span>
     <span>Attempts<b id="attStat">0</b></span>
@@ -100,8 +101,8 @@
 const cvs = document.getElementById("game");
 const ctx = cvs.getContext("2d");
 let W = 0, H = 0, DPR = 1, S = 1;          // css size, device ratio, world scale
-const VIEW_W = 640, VIEW_H = 360;          // logical world viewport
-const GROUND_FRAC = 0.72;
+const VIEW_W = 480, VIEW_H = 270;          // logical viewport (smaller = more zoomed in)
+const GROUND_FRAC = 0.78;
 
 function resize(){
   DPR = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -124,7 +125,7 @@ let soundOn = store.get("gd_sound", true);
 /* ---------- audio (tiny synth, no assets) ---------- */
 let AC = null, musicTimer = null, beat = 0;
 const BPM = 142, SPB = 60 / BPM;
-const bassLine = [0, 0, 7, 0, 3, 3, 10, 7];             // semitones above root
+const bassLine = [0, 0, 7, 0, 3, 3, 10, 7];
 const arpLine  = [12, 15, 19, 22, 19, 15, 12, 10];
 const root = 87.3; // F2
 const st = n => root * Math.pow(2, n / 12);
@@ -166,13 +167,16 @@ function startMusic(){
         if (step % 2 === 0) kick(next);
         blip(st(bassLine[step]), SPB * 0.9, "sawtooth", 0.12, next);
         blip(st(arpLine[step]) * 2, SPB * 0.45, "square", 0.045, next);
-        if (step === 4) blip(6000, 0.03, "square", 0.05, next); // hat-ish tick
+        if (step === 4) blip(6000, 0.03, "square", 0.05, next);
       }
       next += SPB / 2; beat++;
     }
   }, 90);
 }
 const sfxJump  = () => blip(520, 0.09, "triangle", 0.18);
+const sfxOrb   = () => blip(760, 0.11, "triangle", 0.2);
+const sfxPad   = () => blip(340, 0.16, "square", 0.16);
+const sfxPortal= () => { blip(400, 0.2, "sine", 0.2); blip(800, 0.25, "sine", 0.12); };
 const sfxDeath = () => { blip(300, 0.25, "sawtooth", 0.22); blip(150, 0.4, "square", 0.15); };
 const sfxWin   = () => { [523,659,784,1046].forEach((f,i)=>blip(f, 0.35, "triangle", 0.16, AC ? AC.currentTime + i*0.12 : 0)); };
 
@@ -185,62 +189,131 @@ function mulberry32(a){
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const CUBE = 32;                 // obstacle unit
-const SPEED = 5.35, GRAV = 0.82, JUMP_V = -13.6;   // per 60fps frame
-const obstacles = [];            // {t:'s'|'b', x,y,w,h}  y = top, ground at y=0 (up is negative)
+const CUBE = 32;
+const SPEED = 5.35, GRAV = 1.08, JUMP_V = -13.2;   // GD-like: jump spans ~4 tiles
+const PAD_V = -16.6;
+const CEIL = -7 * CUBE;                            // ship corridor ceiling
+
+const obstacles = [];   // {t:'s'|'b'|'pad'|'orb', x, y, w, h, flip?}  y = top; ground = 0, up negative
+const portals = [];     // {x, mode:'ship'|'cube'}
+const shipZones = [];   // {start, end}
 let levelLen = 0;
 
 function buildLevel(){
   const rnd = mulberry32(20260706);
-  const spike = (x, y=0) => obstacles.push({t:"s", x, y:-y*CUBE, w:CUBE, h:CUBE});
-  const block = (x, y=0) => obstacles.push({t:"b", x, y:-(y+1)*CUBE, w:CUBE, h:CUBE});
+  const spike = (x, lvl=0) => obstacles.push({t:"s", x, y:-(lvl+1)*CUBE, w:CUBE, h:CUBE});
+  const cspike = x => obstacles.push({t:"s", x, y:CEIL, w:CUBE, h:CUBE, flip:1});
+  const block = (x, lvl=0) => obstacles.push({t:"b", x, y:-(lvl+1)*CUBE, w:CUBE, h:CUBE});
+  const cblock = (x, i) => obstacles.push({t:"b", x, y:CEIL + i*CUBE, w:CUBE, h:CUBE});
+  const pad = (x, lvl=0) => obstacles.push({t:"pad", x, y:-lvl*CUBE, w:CUBE, h:10});
+  const orb = (x, yc) => obstacles.push({t:"orb", x: x-14, y: yc-14, w:28, h:28, cx:x, cy:yc});
 
+  const C = CUBE;
   const patterns = [
     // tier 1
-    [x => { spike(x); return CUBE; }, 1],
-    [x => { block(x); return CUBE; }, 1],
-    [x => { spike(x); spike(x + CUBE*2.4); return CUBE*3.4; }, 1],
+    [x => { spike(x); return C; }, 1],
+    [x => { block(x); return C; }, 1],
+    [x => { spike(x); spike(x + C*2.6); return C*3.6; }, 1],
+    [x => { spike(x); spike(x + C); return C*2; }, 1],
     // tier 2
-    [x => { spike(x); spike(x + CUBE); return CUBE*2; }, 2],
-    [x => { block(x); block(x + CUBE); spike(x + CUBE*2.6); return CUBE*3.6; }, 2],
-    [x => { block(x); block(x + CUBE, 1); return CUBE*2; }, 2],
-    [x => { spike(x); block(x + CUBE*1.9); return CUBE*2.9; }, 2],
+    [x => { spike(x); spike(x + C); spike(x + C*2); return C*3; }, 2],
+    [x => { block(x); block(x + C, 1); spike(x + C*2.4); return C*3.4; }, 2],
+    [x => { spike(x); block(x + C*1.8); spike(x + C*3.6); return C*4.6; }, 2],
+    // platform run over spikes
+    [x => {
+      for (let i = 0; i < 5; i++) spike(x + i*C);
+      block(x + C*0.8, 1); block(x + C*1.8, 1); block(x + C*3.2, 1);
+      return C*5;
+    }, 2],
+    // pad launch over a wall
+    [x => {
+      pad(x);
+      block(x + C*2.4); block(x + C*2.4, 1); block(x + C*2.4, 2);
+      spike(x + C*3.4); return C*4.4;
+    }, 2],
     // tier 3
-    [x => { spike(x); spike(x + CUBE); spike(x + CUBE*2); return CUBE*3; }, 3],
-    [x => { block(x,0); spike(x + CUBE*1.2); spike(x + CUBE*2.2); block(x + CUBE*3.6); return CUBE*4.6; }, 3],
-    [x => { block(x); block(x + CUBE,1); block(x + CUBE*2,1); spike(x + CUBE*3.4); return CUBE*4.4; }, 3],
+    [x => { spike(x); spike(x + C); spike(x + C*4.4); spike(x + C*5.4); return C*6.4; }, 3],
+    // orb gauntlet over a spike pit too long to plain-jump
+    [x => {
+      for (let i = 0; i < 5; i++) spike(x + i*C);
+      orb(x + C*2.6, -C*2.1);
+      return C*5;
+    }, 3],
+    // stairs up, spike on the ledge, drop
+    [x => {
+      block(x); block(x + C, 1); block(x + C*2, 1);
+      spike(x + C*2, 2); spike(x + C*5.5);
+      return C*6.5;
+    }, 3],
+    // pad launch over a spike bed
+    [x => {
+      pad(x);
+      for (let i = 0; i < 3; i++) spike(x + C + i*C);
+      return C*4.5;
+    }, 3],
+    // tight double-double rhythm
+    [x => { spike(x); spike(x + C); spike(x + C*3.6); spike(x + C*4.6); return C*5.6; }, 3],
   ];
 
-  let x = VIEW_W * 1.4;                    // calm runway before first obstacle
-  const targetLen = SPEED * 60 * 72;       // ~72 seconds of level
-  while (x < targetLen){
-    const prog = x / targetLen;
-    const tier = prog < 0.25 ? 1 : prog < 0.6 ? 2 : 3;
-    const pool = patterns.filter(p => p[1] <= tier);
-    const pick = pool[Math.floor(rnd() * pool.length)][0];
-    const used = pick(x);
-    x += used + CUBE * (4.6 + rnd() * 3.2 - Math.min(prog * 1.6, 1.6));
+  const targetLen = SPEED * 60 * 78;   // ~78 seconds
+  const z1 = { start: targetLen * 0.30, end: targetLen * 0.30 + C*55 };
+  const z2 = { start: targetLen * 0.66, end: targetLen * 0.66 + C*62 };
+  shipZones.push(z1, z2);
+
+  function cubeSection(x0, x1){
+    let x = x0;
+    while (x < x1 - C*7){
+      const prog = x / targetLen;
+      const tier = prog < 0.18 ? 1 : prog < 0.55 ? 2 : 3;
+      const pool = patterns.filter(p => p[1] <= tier);
+      const used = pool[Math.floor(rnd() * pool.length)][0](x);
+      x += used + C * Math.max(2.6, 3.6 + rnd() * 2.4 - prog * 1.6);
+    }
   }
-  levelLen = targetLen + VIEW_W * 0.9;
+  function shipSection(z){
+    portals.push({ x: z.start, mode: "ship" });
+    portals.push({ x: z.end, mode: "cube" });
+    let x = z.start + C*6;
+    while (x < z.end - C*6){
+      const r = rnd();
+      if (r < 0.22){ spike(x); if (rnd() < 0.5) spike(x + C); }
+      else if (r < 0.44){ cspike(x); if (rnd() < 0.5) cspike(x + C); }
+      else if (r < 0.62){ const h = 2 + (rnd() < 0.5 ? 1 : 0); for (let i = 0; i < h; i++) block(x, i); }
+      else if (r < 0.80){ const h = 2 + (rnd() < 0.5 ? 1 : 0); for (let i = 0; i < h; i++) cblock(x, i); }
+      else { // pinch: 3-tile gap in the middle
+        for (let i = 0; i < 2; i++){ block(x, i); cblock(x, i); }
+        spike(x - C, 0); cspike(x + C);
+      }
+      x += C * (4.2 + rnd() * 2.6);
+    }
+  }
+
+  cubeSection(VIEW_W * 1.5, z1.start - C*4);
+  shipSection(z1);
+  cubeSection(z1.end + C*5, z2.start - C*4);
+  shipSection(z2);
+  cubeSection(z2.end + C*5, targetLen);
+  levelLen = targetLen + VIEW_W * 0.8;
 }
 buildLevel();
 
 /* ---------- game state ---------- */
 const player = { x:0, y:0, vy:0, rot:0, size:30, onGround:true, dead:false };
-let camX = 0, state = "menu", deathTime = 0, shake = 0;
+let camX = 0, camY = 0, mode = "cube", portalIdx = 0;
+let state = "menu", deathTime = 0, shake = 0;
 let holding = false, buffered = 0;
 const particles = [];
+const floatTexts = [];
 const rndf = (a,b) => a + Math.random() * (b - a);
 
 function resetRun(){
   player.x = 0; player.y = 0; player.vy = 0; player.rot = 0;
   player.onGround = true; player.dead = false;
-  camX = -VIEW_W * 0.3; particles.length = 0; floatTexts.length = 0; shake = 0;
+  mode = "cube"; portalIdx = 0; camY = 0;
+  camX = -180; particles.length = 0; floatTexts.length = 0; shake = 0;
   attempts++; store.set("gd_attempts", attempts);
-  spawnText(`Attempt ${attempts}`, player.x + 40, -140);
+  floatTexts.push({ msg:`Attempt ${attempts}`, x: player.x + 40, y: -120 });
 }
-const floatTexts = [];
-function spawnText(msg, x, y){ floatTexts.push({msg, x, y}); }
 
 function die(){
   if (player.dead) return;
@@ -260,89 +333,152 @@ function win(){
 }
 const progressPct = () => Math.max(0, Math.min(100, Math.round(player.x / levelLen * 100)));
 
-/* ---------- physics ---------- */
-function doJump(){
-  player.vy = JUMP_V; player.onGround = false; buffered = 0;
-  sfxJump();
+/* ---------- input actions ---------- */
+function doJump(v){
+  player.vy = v === undefined ? JUMP_V : v;
+  player.onGround = false; buffered = 0;
   for (let i = 0; i < 5; i++)
     particles.push({ x:player.x - 10, y:player.y, vx:rndf(-3,-1), vy:rndf(-2,0.5),
       life:rndf(12,22), size:rndf(2,5), col:"#25f4ff", g:0.12 });
 }
+function tryOrb(){
+  if (player.onGround) return false;
+  const pcx = player.x, pcy = player.y - player.size/2;
+  for (const o of obstacles){
+    if (o.t !== "orb" || o.usedAt === attempts) continue;
+    if (Math.abs(o.cx - pcx) < 46 && Math.abs(o.cy - pcy) < 52){
+      o.usedAt = attempts;
+      doJump(); sfxOrb();
+      for (let i = 0; i < 10; i++)
+        particles.push({ x:o.cx, y:o.cy, vx:rndf(-4,4), vy:rndf(-4,4),
+          life:rndf(14,26), size:rndf(2,5), col:"#ffd94a", g:0 });
+      return true;
+    }
+  }
+  return false;
+}
 
+/* ---------- physics ---------- */
 function step(){
   if (player.dead){
-    if (performance.now() - deathTime > 900){ resetRun(); }
+    if (performance.now() - deathTime > 900) resetRun();
+    updateCam();
     return;
   }
   player.x += SPEED;
   if (buffered > 0) buffered--;
 
-  // gravity
-  player.vy += GRAV;
-  player.y += player.vy;
+  // portal crossings
+  while (portalIdx < portals.length && player.x > portals[portalIdx].x){
+    mode = portals[portalIdx].mode; portalIdx++;
+    player.vy *= 0.4; sfxPortal(); shake = 5;
+    for (let i = 0; i < 14; i++)
+      particles.push({ x:player.x, y:player.y - 40 - rndf(0,80), vx:rndf(-3,3), vy:rndf(-3,3),
+        life:rndf(16,30), size:rndf(2,6), col: mode === "ship" ? "#ff3df2" : "#4dff88", g:0 });
+  }
 
   const half = player.size / 2;
-  let footY = 0;              // ground
+  const prevY = player.y;
+
+  if (mode === "ship"){
+    player.vy += holding ? -0.55 : 0.55;
+    player.vy = Math.max(-8.5, Math.min(8.5, player.vy));
+    player.y += player.vy;
+    if (player.y > 0){ player.y = 0; player.vy = 0; }
+    if (player.y - player.size < CEIL){ player.y = CEIL + player.size; player.vy = 0; }
+    player.onGround = false;
+    player.rot += ((player.vy * 0.05) - player.rot) * 0.25;
+  } else {
+    player.vy += GRAV;
+    player.y += player.vy;
+  }
+
   let landed = false;
 
   // block collisions
   for (const o of obstacles){
     if (o.t !== "b") continue;
-    if (o.x > player.x + half + 4 || o.x + o.w < player.x - half + 4) continue;
+    if (o.x >= player.x + half - 4 || o.x + o.w <= player.x - half + 4) continue;
     const top = o.y, bottom = o.y + o.h;
-    const prevBottom = player.y - player.vy;
-    if (player.vy >= 0 && prevBottom <= top + 10 && player.y >= top && player.y <= bottom + 6){
-      footY = Math.min(footY, top); landed = true;
-      player.y = top; player.vy = 0;
-    } else if (player.y > top + 12 && player.y - player.size < bottom - 6){
-      // side hit
-      if (player.x + half - 6 > o.x && player.x - half < o.x){ die(); return; }
+    const prevBottom = prevY, prevTop = prevY - player.size;
+    if (player.vy >= 0 && prevBottom <= top + 11 && player.y >= top && player.y <= bottom + 8){
+      player.y = top; player.vy = 0; landed = true;
+    } else if (player.vy < 0 && prevTop >= bottom - 11 && player.y - player.size <= bottom && player.y >= top - 8){
+      if (mode === "ship"){ player.y = bottom + player.size; player.vy = 0; }
+      else { die(); return; }                       // head bump kills the cube
+    } else if (player.y > top + 6 && player.y - player.size < bottom - 6){
+      die(); return;                                // front collision
     }
   }
-  // ground
-  if (!landed && player.y >= 0){ player.y = 0; landed = true; }
-
-  if (landed){
-    if (!player.onGround){
-      player.rot = Math.round(player.rot / (Math.PI/2)) * (Math.PI/2);
-      for (let i = 0; i < 4; i++)
-        particles.push({ x:player.x, y:player.y, vx:rndf(-3,1), vy:rndf(-2,-0.3),
-          life:rndf(10,18), size:rndf(2,4), col:"#8ea3d8", g:0.15 });
+  if (mode === "cube"){
+    if (!landed && player.y >= 0){ player.y = 0; player.vy = 0; landed = true; }
+    if (landed){
+      if (!player.onGround){
+        player.rot = Math.round(player.rot / (Math.PI/2)) * (Math.PI/2);
+        for (let i = 0; i < 4; i++)
+          particles.push({ x:player.x, y:player.y, vx:rndf(-3,1), vy:rndf(-2,-0.3),
+            life:rndf(10,18), size:rndf(2,4), col:"#8ea3d8", g:0.15 });
+      }
+      player.onGround = true;
+      if (holding || buffered > 0){ doJump(); sfxJump(); }
+    } else {
+      player.onGround = false;
+      player.rot += 0.19;
     }
-    player.onGround = true;
-    if (holding || buffered > 0) doJump();
-  } else {
-    player.onGround = false;
-    player.rot += 0.165;
   }
 
-  // spike collisions (forgiving hitbox)
+  // pads
+  for (const o of obstacles){
+    if (o.t !== "pad" || o.hitAt === attempts) continue;
+    if (o.x > player.x + half || o.x + o.w < player.x - half) continue;
+    if (player.y >= o.y - 8 && player.y <= o.y + 14){
+      o.hitAt = attempts;
+      doJump(PAD_V); sfxPad(); shake = 3;
+      for (let i = 0; i < 8; i++)
+        particles.push({ x:o.x + o.w/2, y:o.y, vx:rndf(-3,3), vy:rndf(-5,-1),
+          life:rndf(12,24), size:rndf(2,5), col:"#ffd94a", g:0.1 });
+    }
+  }
+
+  // spikes (forgiving tip hitbox)
   for (const o of obstacles){
     if (o.t !== "s") continue;
     if (o.x > player.x + half || o.x + o.w < player.x - half) continue;
-    const hx = o.x + o.w * 0.32, hw = o.w * 0.36;
-    const hy = o.y + o.h * 0.35, hh = o.h * 0.65;   // spike tip zone
-    const py = player.y, ps = player.size;
+    const hx = o.x + o.w * 0.30, hw = o.w * 0.40;
+    const hy = o.flip ? o.y : o.y + o.h * 0.35;
+    const hh = o.h * 0.65;
     if (player.x + half - 5 > hx && player.x - half + 5 < hx + hw &&
-        py > hy && py - ps < hy + hh){ die(); return; }
+        player.y - 3 > hy && player.y - player.size + 3 < hy + hh){ die(); return; }
   }
 
   // trail
-  if (Math.random() < 0.55)
+  if (Math.random() < 0.6)
     particles.push({ x:player.x - half, y:player.y - half + rndf(-8,8), vx:-2, vy:0,
-      life:rndf(8,16), size:rndf(2,4), col:"rgba(37,244,255,.7)", g:0 });
+      life:rndf(8,16), size:rndf(2,4), col: mode === "ship" ? "rgba(255,61,242,.7)" : "rgba(37,244,255,.7)", g:0 });
 
-  camX = player.x - VIEW_W * 0.3;
+  updateCam();
   if (player.x >= levelLen) win();
 }
 
+function updateCam(){
+  camX = player.x - (W / S) * 0.32;
+  const target = mode === "ship"
+    ? CEIL / 2 + (H * GROUND_FRAC - H / 2) / S   // center the corridor on screen
+    : Math.min(0, player.y + CUBE * 3.2);
+  camY += (target - camY) * 0.07;      // smooth pan (jumps, portals, high platforms)
+}
+
 /* ---------- rendering ---------- */
-function draw(now){
+function inShipZone(x){
+  for (const z of shipZones) if (x >= z.start && x <= z.end) return true;
+  return false;
+}
+
+function draw(){
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const prog = state === "menu" ? 0 : player.x / levelLen;
   const hue = 232 + prog * 130;
 
-  // sky
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, `hsl(${hue}, 65%, 8%)`);
   g.addColorStop(0.6, `hsl(${hue + 20}, 70%, 16%)`);
@@ -355,9 +491,9 @@ function draw(now){
 
   // parallax shapes
   ctx.save();
-  ctx.translate(sx * 0.3, sy * 0.3);
+  ctx.translate(sx * 0.3, sy * 0.3 - camY * S * 0.15);
   for (let layer = 0; layer < 2; layer++){
-    const p = layer ? 0.28 : 0.14, size = layer ? 90 : 150, n = 7;
+    const p = layer ? 0.28 : 0.14, size = layer ? 70 : 120, n = 7;
     ctx.fillStyle = `hsla(${hue + 40}, 80%, ${30 + layer * 14}%, ${0.10 + layer * 0.07})`;
     for (let i = 0; i < n; i++){
       const wx = ((i * 977 + layer * 431) % 2200) - ((camX * p) % 2200);
@@ -372,33 +508,52 @@ function draw(now){
   }
   ctx.restore();
 
-  // world transform: scale S, world y0 (ground) at groundY
+  // world space
   ctx.save();
   ctx.translate(sx, sy);
   ctx.translate(0, groundY);
   ctx.scale(S, S);
-  ctx.translate(-camX, 0);
+  ctx.translate(-camX, -camY);
 
   const viewL = camX - 60, viewR = camX + W / S + 60;
+  const viewT = camY - (groundY / S) - 40, viewB = camY + (H - groundY) / S + 40;
 
-  // ground fill + edge
+  // ground
   ctx.fillStyle = `hsl(${hue + 15}, 55%, 13%)`;
-  ctx.fillRect(viewL, 0, viewR - viewL, H / S);
+  ctx.fillRect(viewL, 0, viewR - viewL, viewB);
   ctx.fillStyle = `hsl(${hue - 10}, 90%, 62%)`;
   ctx.fillRect(viewL, 0, viewR - viewL, 3);
   ctx.fillStyle = `hsla(${hue - 10}, 90%, 62%, .25)`;
   ctx.fillRect(viewL, 3, viewR - viewL, 10);
-  // ground grid ticks
   ctx.fillStyle = "rgba(255,255,255,.06)";
   for (let gx = Math.floor(viewL / 64) * 64; gx < viewR; gx += 64)
     ctx.fillRect(gx, 6, 2, 60);
 
-  // finish line
-  if (levelLen < viewR){
-    ctx.fillStyle = "#ffd94a";
-    ctx.fillRect(levelLen, -260, 6, 260);
-    ctx.font = "900 22px sans-serif"; ctx.fillStyle = "#ffd94a"; ctx.textAlign = "left";
-    ctx.fillText("FINISH", levelLen + 14, -230);
+  // ship-zone ceilings
+  for (const z of shipZones){
+    if (z.end < viewL || z.start > viewR) continue;
+    const a = Math.max(z.start, viewL), b = Math.min(z.end, viewR);
+    ctx.fillStyle = `hsl(${hue + 15}, 55%, 13%)`;
+    ctx.fillRect(a, viewT, b - a, CEIL - viewT);
+    ctx.fillStyle = `hsl(${hue - 10}, 90%, 62%)`;
+    ctx.fillRect(a, CEIL - 3, b - a, 3);
+    ctx.fillStyle = `hsla(${hue - 10}, 90%, 62%, .25)`;
+    ctx.fillRect(a, CEIL - 13, b - a, 10);
+  }
+
+  // portals
+  for (const p of portals){
+    if (p.x < viewL - 40 || p.x > viewR + 40) continue;
+    const ship = p.mode === "ship";
+    const col = ship ? "#ff3df2" : "#4dff88";
+    const cy = -CUBE * 1.9, ry = CUBE * 1.9, rx = 13;
+    ctx.lineWidth = 6; ctx.strokeStyle = col; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.ellipse(p.x, cy, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 14; ctx.globalAlpha = 0.22;
+    ctx.beginPath(); ctx.ellipse(p.x, cy, rx + 4, ry + 4, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.font = "900 12px sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = col;
+    ctx.fillText(ship ? "SHIP" : "CUBE", p.x, cy - ry - 10);
   }
 
   // obstacles
@@ -406,21 +561,53 @@ function draw(now){
     if (o.x + o.w < viewL || o.x > viewR) continue;
     if (o.t === "s"){
       ctx.beginPath();
-      ctx.moveTo(o.x, o.y + o.h);
-      ctx.lineTo(o.x + o.w / 2, o.y);
-      ctx.lineTo(o.x + o.w, o.y + o.h);
+      if (o.flip){
+        ctx.moveTo(o.x, o.y);
+        ctx.lineTo(o.x + o.w / 2, o.y + o.h);
+        ctx.lineTo(o.x + o.w, o.y);
+      } else {
+        ctx.moveTo(o.x, o.y + o.h);
+        ctx.lineTo(o.x + o.w / 2, o.y);
+        ctx.lineTo(o.x + o.w, o.y + o.h);
+      }
       ctx.closePath();
       ctx.fillStyle = "#12102e"; ctx.fill();
       ctx.lineWidth = 3; ctx.strokeStyle = "#ff3df2"; ctx.stroke();
       ctx.lineWidth = 7; ctx.strokeStyle = "rgba(255,61,242,.18)"; ctx.stroke();
-    } else {
+    } else if (o.t === "b"){
       ctx.fillStyle = "#141233";
       ctx.fillRect(o.x, o.y, o.w, o.h);
       ctx.lineWidth = 3; ctx.strokeStyle = "#25f4ff";
       ctx.strokeRect(o.x + 1.5, o.y + 1.5, o.w - 3, o.h - 3);
       ctx.fillStyle = "rgba(37,244,255,.12)";
       ctx.fillRect(o.x + 7, o.y + 7, o.w - 14, o.h - 14);
+    } else if (o.t === "pad"){
+      ctx.fillStyle = "#ffd94a";
+      ctx.beginPath();
+      ctx.ellipse(o.x + o.w/2, o.y, o.w/2, 9, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,217,74,.3)";
+      ctx.beginPath();
+      ctx.ellipse(o.x + o.w/2, o.y, o.w/2 + 5, 14, 0, Math.PI, 0);
+      ctx.fill();
+    } else if (o.t === "orb"){
+      const used = o.usedAt === attempts;
+      const pulse = 1 + Math.sin(performance.now() / 180) * 0.12;
+      ctx.globalAlpha = used ? 0.25 : 1;
+      ctx.fillStyle = "#ffd94a";
+      ctx.beginPath(); ctx.arc(o.cx, o.cy, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,217,74,.8)";
+      ctx.beginPath(); ctx.arc(o.cx, o.cy, 15 * pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
     }
+  }
+
+  // finish line
+  if (levelLen < viewR){
+    ctx.fillStyle = "#ffd94a";
+    ctx.fillRect(levelLen, -220, 6, 220);
+    ctx.font = "900 20px sans-serif"; ctx.fillStyle = "#ffd94a"; ctx.textAlign = "left";
+    ctx.fillText("FINISH", levelLen + 14, -196);
   }
 
   // particles
@@ -434,10 +621,9 @@ function draw(now){
   }
   ctx.globalAlpha = 1;
 
-  // floating attempt text
   for (const t of floatTexts){
     if (t.x + 300 < viewL || t.x > viewR) continue;
-    ctx.font = "900 34px sans-serif";
+    ctx.font = "900 30px sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.textAlign = "left";
     ctx.fillText(t.msg, t.x, t.y);
@@ -449,19 +635,31 @@ function draw(now){
     ctx.save();
     ctx.translate(player.x, player.y - half);
     ctx.rotate(player.rot);
-    const pg = ctx.createLinearGradient(-half, -half, half, half);
-    pg.addColorStop(0, "#5ef7ff"); pg.addColorStop(1, "#1e7dff");
-    ctx.shadowColor = "rgba(37,244,255,.8)"; ctx.shadowBlur = 18;
-    ctx.fillStyle = pg;
-    ctx.fillRect(-half, -half, player.size, player.size);
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "rgba(8,20,50,.7)"; ctx.lineWidth = 3;
-    ctx.strokeRect(-half + 1.5, -half + 1.5, player.size - 3, player.size - 3);
-    // face
-    ctx.fillStyle = "#0a1a3a";
-    ctx.fillRect(-half + 7, -half + 8, 6, 8);
-    ctx.fillRect(half - 13, -half + 8, 6, 8);
-    ctx.fillRect(-half + 8, half - 12, player.size - 16, 4);
+    if (mode === "ship"){
+      ctx.shadowColor = "rgba(255,61,242,.8)"; ctx.shadowBlur = 16;
+      ctx.fillStyle = "#ff3df2";
+      ctx.beginPath();
+      ctx.moveTo(half + 6, 0);
+      ctx.lineTo(-half, -half + 4);
+      ctx.lineTo(-half + 3, half - 2);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#5ef7ff";
+      ctx.beginPath(); ctx.arc(0, -3, 6, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const pg = ctx.createLinearGradient(-half, -half, half, half);
+      pg.addColorStop(0, "#5ef7ff"); pg.addColorStop(1, "#1e7dff");
+      ctx.shadowColor = "rgba(37,244,255,.8)"; ctx.shadowBlur = 16;
+      ctx.fillStyle = pg;
+      ctx.fillRect(-half, -half, player.size, player.size);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(8,20,50,.7)"; ctx.lineWidth = 3;
+      ctx.strokeRect(-half + 1.5, -half + 1.5, player.size - 3, player.size - 3);
+      ctx.fillStyle = "#0a1a3a";
+      ctx.fillRect(-half + 7, -half + 8, 6, 8);
+      ctx.fillRect(half - 13, -half + 8, 6, 8);
+      ctx.fillRect(-half + 8, half - 12, player.size - 16, 4);
+    }
     ctx.restore();
   }
   ctx.restore();
@@ -470,7 +668,7 @@ function draw(now){
   if (state === "play"){
     const pct = progressPct();
     const bw = Math.min(W * 0.5, 340);
-    const bx = (W - bw) / 2, by = Math.max(14, 10 + (window.visualViewport ? 0 : 0)) + (H * 0.03);
+    const bx = (W - bw) / 2, by = 14 + H * 0.03;
     ctx.fillStyle = "rgba(255,255,255,.14)";
     ctx.beginPath(); ctx.roundRect(bx, by, bw, 8, 4); ctx.fill();
     ctx.fillStyle = "#25f4ff";
@@ -486,11 +684,10 @@ function draw(now){
     }
   }
 
-  // portrait hint
   if (state === "play" && H > W){
     ctx.font = "700 12px sans-serif"; ctx.textAlign = "center";
     ctx.fillStyle = "rgba(255,255,255,.4)";
-    ctx.fillText("Tip: landscape gives you more warning", W / 2, H - 16 - (H * 0.02));
+    ctx.fillText("Tip: landscape gives you more warning", W / 2, H - 16 - H * 0.02);
   }
 }
 
@@ -505,7 +702,7 @@ function loop(now){
   if (state === "play"){
     while (acc >= FRAME){ step(); acc -= FRAME; }
   } else acc = 0;
-  draw(now);
+  draw();
 }
 requestAnimationFrame(loop);
 
@@ -519,12 +716,17 @@ function press(){
     return;
   }
   holding = true;
-  if (player.onGround) doJump(); else buffered = 7;
+  if (mode === "cube"){
+    if (tryOrb()) return;
+    if (player.onGround){ doJump(); sfxJump(); }
+    else buffered = 7;
+  }
 }
 function release(){ holding = false; }
 
 window.addEventListener("pointerdown", e => {
-  if (e.target.closest("button") || e.target.closest(".overlay")) return;
+  const el = e.target instanceof Element ? e.target : null;
+  if (el && (el.closest("button") || el.closest(".overlay"))) return;
   e.preventDefault(); press();
 }, {passive:false});
 window.addEventListener("pointerup", release);
@@ -568,6 +770,21 @@ soundBtn.addEventListener("click", () => {
   ensureAudio(); if (soundOn) startMusic();
   paintSound();
 });
+
+/* debug hook for automated testing */
+window.__gd = {
+  get x(){ return player.x; }, get y(){ return player.y; },
+  get dead(){ return player.dead; }, get mode(){ return mode; },
+  get attempts(){ return attempts; }, get pct(){ return progressPct(); },
+  get state(){ return state; },
+  get vy(){ return player.vy; },
+  get level(){ return { obstacles, portals, CEIL, SPEED, GRAV, JUMP_V }; },
+  skip(x){ player.x = x; player.y = 0; player.vy = 0;
+           portalIdx = 0; mode = "cube";
+           while (portalIdx < portals.length && portals[portalIdx].x < x){
+             mode = portals[portalIdx].mode; portalIdx++;
+           } }
+};
 
 })();
 </script>
