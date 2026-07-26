@@ -141,7 +141,9 @@ async function writeResume({ category, roleText, outPath }) {
   console.log('wrote', outPath);
 }
 
-(async () => {
+module.exports = { buildDoc, writeResume };
+
+if (require.main === module) (async () => {
   const args = process.argv.slice(2);
   const jobsIdx = args.indexOf('--jobs');
   if (jobsIdx === -1) {
