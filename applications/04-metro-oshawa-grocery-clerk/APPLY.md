@@ -27,3 +27,8 @@ Matthew Blakney
 ```
 
 > Evidence level: Search-snippet evidence July 25, 2026; store postings are typically evergreen/refreshed. Confirm live.
+
+## VERIFIED LIVE — July 26, 2026 (real browser session)
+- Posting confirmed open on talent.metro.ca: Req ID 46042, $16.60/hr start, 1265 Ritson Rd N, Days/Evenings & Weekends, permanent PT.
+- The Apply button leads to a GUEST FORM — **no account needed**. Fields: name, email, phone, country/province/city, **street address + postal code (required)**, resume upload, availability (start date, hours/week, day/evening/overnight/weekend), work-experience summary, and selects: entitled to work in Canada / criminal conviction without pardon / current-former Metro employee / other Metro processes / how heard / optional salary+commute+diversity, then "I agree, submit".
+- Everything except the street address + postal code is prepared. Add those two values and this submits in ~3 minutes.

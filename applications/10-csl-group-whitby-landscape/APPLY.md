@@ -30,3 +30,6 @@ Matthew Blakney
 ```
 
 > Evidence level: Glassdoor + LinkedIn active listings in search, July 25, 2026.
+
+## VERIFIED — July 26, 2026 (real browser session)
+- cslgroup.ca/careers/ is live but its application form is protected by Google reCAPTCHA, so it must be submitted by a human. Use the LinkedIn Easy Apply (job id 4186571926) or the site form — both take the resume in this folder.

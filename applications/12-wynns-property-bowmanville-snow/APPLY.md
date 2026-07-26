@@ -35,3 +35,6 @@ Matthew Blakney
 ```
 
 > Evidence level: Kijiji ad text + company site via search, July 25, 2026.
+
+## VERIFIED — July 26, 2026 (real browser session)
+- wynnsproperty.ca has NO application form — the Contact Us page confirms exactly the two emails in this pack: tony@wynnsproperty.ca and peter@wynnsproperty.ca (4694 Liberty St N Bowmanville, 905-263-2200). The drafted email is the application.

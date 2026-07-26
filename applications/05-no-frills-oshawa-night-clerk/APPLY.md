@@ -31,3 +31,7 @@ Matthew Blakney
 ```
 
 > Evidence level: Search-snippet evidence July 25, 2026. Confirm live.
+
+## VERIFIED LIVE — July 26, 2026: fresh Bowmanville No Frills reqs
+- Job Bank confirms two No Frills Bowmanville postings refreshed July 14, 2026, advertised until Aug 13: Grocery Clerk FT and Produce Clerk FT, $17.60–18.45/hr, start ASAP.
+- Full postings + apply: https://www.careerbeacon.com/en/job-21/3452246/nofrills/grocery-clerk-full-time/bowmanville (produce clerk is CareerBeacon #3452263). CareerBeacon needs a free job-seeker account (2 min) to apply.

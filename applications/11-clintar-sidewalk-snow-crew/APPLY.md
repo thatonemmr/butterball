@@ -36,3 +36,7 @@ Matthew Blakney
 ```
 
 > Evidence level: Clintar's own career pages via search, July 25, 2026.
+
+## VERIFIED — July 26, 2026 (real browser session)
+- Checked Clintar's live ATS board (clintar-careers.careerplug.com/jobs): NO Durham/Scarborough postings up in July — closest are Vaughan/Caledon/Brampton. Sidewalk-crew reqs drop in fall, exactly as researched.
+- The July move stands: send the drafted email to gtae.info@clintar.com now to get on the GTA East roster before postings open. Old deep-link URLs 404 — use https://www.clintar.com/oshawawhitby/careers/ ("SEE OPEN POSITIONS") to watch the board.

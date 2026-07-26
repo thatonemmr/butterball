@@ -32,3 +32,7 @@ Matthew Blakney
 ```
 
 > Evidence level: Live pages on Weed Man's own careers site surfaced in search, July 25, 2026.
+
+## STATUS CHANGE — July 26, 2026 (verified in browser)
+- Weed Man restructured their websites: careers.weedman.com and weedmancanada.com franchise pages now redirect to the consumer site — the posting URLs above are DEFUNCT.
+- New path: apply through Indeed ("Weed Man" + Whitby/Oshawa) or call the local branch. Keep this folder's resume; the role itself was real and Weed Man hires all season.

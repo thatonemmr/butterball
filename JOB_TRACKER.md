@@ -63,7 +63,8 @@ and a filled-in cover note or ready-to-send email.
 - No Frills **Bowmanville** franchise — grocery + produce clerk on Job Bank (#49899567 / #49899568) — franchise postings often accept simple email apply; Job Bank listings expire quickly
 
 **Landscaping**
-- Axhorn Landscaping — Labourer PT $19/hr, Oshawa (Indeed); Whitby Shores Landscaping — crew member, Whitby (Indeed; also runs 24-hr snow crews — "spaces fill fast"); Whitby Landscaping & Gardening — crew, landscapingwhitby.com/careers (also 905-926-9111)
+- Axhorn Landscaping — Labourer PT $19/hr, Oshawa (Indeed); Whitby Shores Landscaping — crew member, Whitby (Indeed; also runs 24-hr snow crews — "spaces fill fast")
+- ~~Whitby Landscaping & Gardening~~ **downgraded (verified Jul 26):** their careers page requires a clean valid **G licence + driver's abstract + own transportation + 1 yr experience**, and the on-page form is broken — email Info@LandscapingWhitby.com only if he gets licensed
 - TDA Landscape — Landscaper $20/hr ×5 vacancies, Ajax (Job Bank #49195541; asks 1 yr experience — apply anyway, posting is older so verify); Trent Invest — Grounds Labourer, Pickering (Job Bank #49767508, fresh June posting)
 - Oshawa Golf & Curling Club — greens crew, 6am starts (call the club; mid-season backfill happens when students quit)
 
@@ -81,4 +82,13 @@ and a filled-in cover note or ready-to-send email.
 | Date | Job | Action | Result |
 |---|---|---|---|
 | 2026-07-26 | all | Research + tailored resumes + apply packs built | ready for submission |
+| 2026-07-26 | all form targets | Live browser session — attempted direct submission | see below |
+| 2026-07-26 | Metro Oshawa | Opened real apply form (guest, no account; Req 46042 live) | **ready to submit the moment Matthew's street address + postal code are provided** (skipped per Elijah's instruction to skip address-required forms) |
+| 2026-07-26 | Weed Man | Followed all posting URLs | defunct — site restructured to consumer pages; apply via Indeed/branch instead |
+| 2026-07-26 | Clintar | Checked live CareerPlug board | no Durham reqs in July (fall hiring); send drafted email now |
+| 2026-07-26 | CSL Group | Opened careers form | blocked by Google reCAPTCHA — human submit required (LinkedIn Easy Apply is fastest) |
+| 2026-07-26 | Whitby Landscaping & Gardening | Read careers page | requires G licence + abstract + 1 yr exp; form broken — downgraded |
+| 2026-07-26 | Wynn's | Checked site | no form exists; the two drafted emails ARE the application |
+| 2026-07-26 | No Frills Bowmanville | Verified via Job Bank | FRESH: posted Jul 14, open to Aug 13, $17.60–18.45 FT ×2 roles; apply via CareerBeacon (free account) |
+| 2026-07-26 | Amazon/Walmart/Loblaw/Sobeys/Randstad/FedEx/Home Depot | — | account + email verification walls; Matthew submits with packaged materials (2–5 min each) |
 |  |  |  |  |
