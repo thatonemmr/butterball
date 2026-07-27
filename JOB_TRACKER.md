@@ -5,14 +5,18 @@ Every "ready-to-go" job below has a folder in `applications/` containing a **res
 tailored to that job** (PDF + Word), the apply link(s), step-by-step instructions,
 and a filled-in cover note or ready-to-send email.
 
-**Read this first — honest caveats**
-- This sandbox could not open job pages directly (network policy blocks outside sites), so every
-  posting was evidenced through search-result data from the employers' own career sites and job
-  boards, captured July 25, 2026. Links are copied verbatim, never guessed — but postings close
-  fast; if a link is dead, search the employer's careers site for the same title.
-- Nothing has been submitted yet. Portals (Amazon, Walmart, Loblaw, Sobeys…) require Matthew's
-  own account/email, so submission is his 2–5 minute step per job, everything else is prepared.
-- Wages come from posting snippets; treat as approximate until seen on the live posting.
+**Read this first — status and caveats**
+- ✅ **2 applications submitted (Metro Oshawa + Metro Whitby, July 26)** — both returned a server
+  `202 REQUEST_ACCEPTED` and an on-screen success confirmation. Watch **blakney78@outlook.com**.
+- Postings were researched July 25 from employers' own career sites and job boards, then the form
+  targets were re-checked in a live browser July 26 (see the status log at the bottom for what is
+  live, defunct, or gated). Links are copied verbatim, never guessed — postings still close fast.
+- Everything else remains packaged, not sent. Account-gated portals (Amazon, Walmart, Loblaw,
+  Sobeys, FedEx, Home Depot, Randstad) need Matthew's own login and an email verification code,
+  so those are his 2–5 minute step each; the tailored resume and answers are already in the folder.
+- The four email applications (Clintar, Wynn's, Hank Deenen, Mr. Lawnmower) are drafted and should
+  be sent from Matthew's own address so replies reach him.
+- Wages come from posting data; treat as approximate until seen on the live posting.
 
 ---
 
