@@ -23,7 +23,7 @@ and a filled-in cover note or ready-to-send email.
 | 1 | **Amazon** — Delivery Station Warehouse Associate | Scarborough (400 Nugget Ave) + check Ajax/Whitby/Pickering on site | ~$20–22.60/hr PT | Fully automated hiring — pick a shift, get a start date. No resume, no interview | `applications/01-…` |
 | 2 | **Randstad** — Warehouse Associate (+ students-welcome on-call PT) | Ajax, at Ajax GO | $21/hr | Agency places entry-level within days; 50 lb req = his mover experience | `applications/02-…` |
 | 3 | **Sobeys RSC** — Warehouse Order Selector ×2 shifts | Whitby | **$22.80/hr FT** | Multiple concurrent reqs = volume hiring. Best FT money near home | `applications/03-…` |
-| 4 | **Metro** — Grocery Clerk PT (+ Whitby clerk req) | Oshawa (Ritson Rd) | $16.60 union | High-churn PT clerk in his home city; simple form, no account | `applications/04-…` |
+| 4 | ✅ **Metro** — Grocery Clerk PT — **SUBMITTED Jul 26** (Oshawa Req 46042 **and** Whitby Req 46029) | Oshawa + Whitby | $16.60 union | High-churn PT clerk in his home city; done — watch his email | `applications/04-…`, `04b-…` |
 | 5 | **No Frills / Loblaw** — Grocery Clerk PT **Night** (+ RCSS produce, Shoppers on same login) | Oshawa | $17.60–18.45 | Overnight stocking is chronically understaffed; "no experience required" | `applications/05-…` |
 | 6 | **Walmart** — Stocking / Omni Fulfillment (+ Whitby PT req) | Oshawa (Laval Dr) | from ~$17.75 | Highest-volume hourly hirer in the city; continuous reqs | `applications/06-…` |
 
@@ -83,7 +83,8 @@ and a filled-in cover note or ready-to-send email.
 |---|---|---|---|
 | 2026-07-26 | all | Research + tailored resumes + apply packs built | ready for submission |
 | 2026-07-26 | all form targets | Live browser session — attempted direct submission | see below |
-| 2026-07-26 | Metro Oshawa | Opened real apply form (guest, no account; Req 46042 live) | **ready to submit the moment Matthew's street address + postal code are provided** (skipped per Elijah's instruction to skip address-required forms) |
+| 2026-07-26 | **Metro Oshawa (Req 46042, 1265 Ritson Rd N)** | **APPLICATION SUBMITTED** | ✅ **202 REQUEST_ACCEPTED** + on-screen success modal; confirmation email sent to blakney78@outlook.com |
+| 2026-07-26 | **Metro Whitby (Req 46029, 70 Thickson Rd S)** | **APPLICATION SUBMITTED** | ✅ **202 REQUEST_ACCEPTED** + on-screen success modal |
 | 2026-07-26 | Weed Man | Followed all posting URLs | defunct — site restructured to consumer pages; apply via Indeed/branch instead |
 | 2026-07-26 | Clintar | Checked live CareerPlug board | no Durham reqs in July (fall hiring); send drafted email now |
 | 2026-07-26 | CSL Group | Opened careers form | blocked by Google reCAPTCHA — human submit required (LinkedIn Easy Apply is fastest) |

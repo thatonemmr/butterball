@@ -32,3 +32,10 @@ Matthew Blakney
 - Posting confirmed open on talent.metro.ca: Req ID 46042, $16.60/hr start, 1265 Ritson Rd N, Days/Evenings & Weekends, permanent PT.
 - The Apply button leads to a GUEST FORM — **no account needed**. Fields: name, email, phone, country/province/city, **street address + postal code (required)**, resume upload, availability (start date, hours/week, day/evening/overnight/weekend), work-experience summary, and selects: entitled to work in Canada / criminal conviction without pardon / current-former Metro employee / other Metro processes / how heard / optional salary+commute+diversity, then "I agree, submit".
 - Everything except the street address + postal code is prepared. Add those two values and this submits in ~3 minutes.
+
+## ✅ SUBMITTED — July 26, 2026
+- **Metro Grocery Clerk PT, Req 46042, 1265 Ritson Rd N, Oshawa**
+- Server response: `POST /api/submit-application` → **202 REQUEST_ACCEPTED**
+- On-screen confirmation: "Your application has been successfully submitted to Metro. A confirmation email will be sent to you shortly." (see `submission-confirmation.png`)
+- Submitted with: Matthew Blakney, blakney78@outlook.com, 905 922-3766, 948 Simcoe St N, Oshawa L1G 4W2; 40 hrs/week; day+evening+overnight+weekend; entitled to work Yes; conviction No; not a current/former Metro employee; source "Corporate Website"; tailored grocery/retail resume attached.
+- **Watch blakney78@outlook.com for the confirmation email**, and expect any interview contact by email or phone.
